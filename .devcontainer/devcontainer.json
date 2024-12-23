@@ -1,0 +1,49 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+    "dockerFile": "Dockerfile",
+    "build": {
+        "args": {
+            "WORKSPACE": "${containerWorkspaceFolder}" // 代表容器工作区的路径
+        }
+    },
+    "remoteUser": "root", // 容器内默认用户
+    // runArgs 配置是传递给 Docker 容器的启动参数，用来定制容器的行为
+    "runArgs": [
+        "--network=host", // 让容器使用主机的网络设置，这样容器内的应用可以访问主机的网络
+        "--cap-add=SYS_PTRACE", // 用于调试进程
+        "--security-opt=seccomp:unconfined", // 禁用 Docker 容器的 seccomp 安全配置，这样容器内的进程可以进行更多系统调用
+        "--security-opt=apparmor:unconfined", // 禁用 AppArmor 安全配置，类似于 seccomp
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix", // 将主机的 X11 socket 共享给容器，允许容器内的图形应用访问主机的显示（比如 GUI）
+        "--ipc=host" // 使容器与主机共享 IPC（进程间通信）命名空间，允许容器与主机共享内存和信号量等
+    ],
+    // containerEnv 配置设置了容器内部的环境变量，这些环境变量帮助容器内的应用程序访问主机的显示和音频等服务。
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}", // 会从主机的环境变量中获取 DISPLAY 设置
+        "XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}", // 允许容器使用主机的 XDG_RUNTIME_DIR，它通常包含用于与显示服务交互的 Unix 域套接字
+        "PULSE_SERVER": "${localEnv:PULSE_SERVER}", // 允许容器使用主机的 PulseAudio 音频服务器
+        "LIBGL_ALWAYS_SOFTWARE": "1", // 强制 OpenGL 使用软件渲染，这通常用于没有硬件加速支持的环境
+        "GST_PLUGIN_PATH": "/usr/local/lib/x86_64-linux-gnu/gstreamer-1.0", // 默认的gstreamer插件安装路径
+        "HTTP_PROXY": "http://192.168.30.232:7890", // 添加 HTTP 代理
+        "HTTPS_PROXY": "http://192.168.30.232:7890" // 添加 HTTPS 代理
+    },
+    // 定制容器内的 VS Code 环境
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools-extension-pack",
+                "ms-azuretools.vscode-docker",
+                "yzhang.markdown-all-in-one",
+                "GitHub.copilot-chat",
+                "GitHub.copilot",
+                "ms-vscode.hexeditor",
+                "mesonbuild.mesonbuild",
+                "jeff-hykin.better-cpp-syntax",
+                "ms-vscode.cpptools-themes",
+                "Mrmomo.meson-build",
+                "Chouzz.vscode-better-align"
+            ]
+        }
+    },
+    // 这里用来关闭 Yama 安全模块，以便容器内的应用程序可以Attach调试其他进程。
+    "postCreateCommand": "sudo sh -c 'echo 0 > /proc/sys/kernel/yama/ptrace_scope'"
+}
