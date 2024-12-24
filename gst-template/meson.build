@@ -1,8 +1,9 @@
-project('gst-template', 'c', license: 'LGPL')
+project('gst-template', ['cpp', 'c'])
 
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 
 cc = meson.get_compiler('c')
+cxx = meson.get_compiler('cpp')
 
 gst_version = meson.project_version()
 
@@ -20,3 +21,6 @@ gstbase_dep = dependency(
 
 subdir('gst-plugin')
 subdir('gst-app')
+
+# 测试
+subdir('tests')
