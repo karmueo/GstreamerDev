@@ -19,4 +19,4 @@ gstbase_dep = dependency(
 )
 
 subdir('gst-plugin')
-subdir('tests')
+subdir('gst-app')

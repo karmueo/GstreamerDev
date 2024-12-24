@@ -50,7 +50,7 @@
             "id": "exe_package",
             "type": "promptString",
             "description": "可执行文件默认的包名",
-            "default": "tests"
+            "default": "gst-app"
         },
         {
             "id": "lib_package",
@@ -62,7 +62,7 @@
             "id": "program",
             "type": "promptString",
             "description": "debug默认程序",
-            "default": "test_plugin"
+            "default": "demo"
         }
     ]
 }
