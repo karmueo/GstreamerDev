@@ -36,6 +36,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE("src",
                                                                   GST_PAD_ALWAYS,
                                                                   GST_STATIC_CAPS("ANY")); // 定义静态Pad模板，类型为src，始终存在，支持任意格式
 
+static gboolean gst_my_filter_src_query(GstPad *pad,
+                                        GstObject *parent,
+                                        GstQuery *query);
+
 #define gst_my_filter_parent_class parent_class
 G_DEFINE_TYPE(GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT); // 定义GstMyFilter类型
 // 宏 GST_ELEMENT_REGISTER_DEFINE 与 GST_ELEMENT_REGISTER_DECLARE 相结合，允许通过调用 GST_ELEMENT_REGISTER (my_filter) 从插件内或任何其他插件/应用程序中注册元素。
@@ -107,6 +111,11 @@ gst_my_filter_init(GstMyFilter *filter)
                                GST_DEBUG_FUNCPTR(gst_my_filter_sink_event)); // 设置sink pad事件函数
     gst_pad_set_chain_function(filter->sinkpad,
                                GST_DEBUG_FUNCPTR(gst_my_filter_chain)); // 设置sink pad链函数
+
+    // 在将pad添加到元素之前，在pad上配置事件函数
+    gst_pad_set_query_function(filter->srcpad,
+                               gst_my_filter_src_query);
+
     // filter->sinkpad 将会自动代理其连接的srcpad 的 caps。
     // 这意味着 sinkpad 将继承并传播其上游元素的 caps，从而确保数据格式的一致性和兼容性
     GST_PAD_SET_PROXY_CAPS(filter->sinkpad);                   // 设置代理能力
@@ -206,6 +215,72 @@ gst_my_filter_chain(GstPad *pad, GstObject *parent, GstBuffer *buf)
 
     /* 直接推送输入缓冲区，不做任何处理 */
     return gst_pad_push(filter->srcpad, buf);
+}
+
+/**
+ * @brief 处理源查询的回调函数。
+ *
+ * 这个函数用于处理从src pad 发出的查询请求。
+ *
+ * @param pad 指向 GstPad 的指针，表示源 pad。
+ * @param parent 指向 GstObject 的指针，表示父对象。
+ * @param query 指向 GstQuery 的指针，表示查询请求。
+ *
+ * @return gboolean 如果查询处理成功，返回 TRUE；否则返回 FALSE。
+ */
+static gboolean
+gst_my_filter_src_query(GstPad *pad,
+                        GstObject *parent,
+                        GstQuery *query)
+{
+    gboolean ret;
+
+    switch (GST_QUERY_TYPE(query))
+    {
+    case GST_QUERY_POSITION:
+        /* we should report the current position */
+        gint64 position;
+
+        if (gst_element_query_position(GST_ELEMENT(parent), GST_FORMAT_TIME, &position))
+        {
+            gst_query_set_position(query, GST_FORMAT_TIME, position);
+            ret = TRUE;
+        }
+        else
+        {
+            ret = FALSE;
+        }
+
+        break;
+    case GST_QUERY_DURATION:
+        /* we should report the duration here */
+        // 获取时长
+        gint64 duration;
+
+        if (gst_element_query_duration(GST_ELEMENT(parent), GST_FORMAT_TIME, &duration))
+        {
+            gst_query_set_duration(query, GST_FORMAT_TIME, duration);
+            ret = TRUE;
+        }
+        else
+        {
+            ret = FALSE;
+        }
+        break;
+    case GST_QUERY_CAPS:
+        /* we should report the supported caps here */
+        // 获取能力
+        GstCaps *caps;
+
+        caps = gst_pad_get_current_caps(pad);
+        gst_query_set_caps_result(query, caps);
+        break;
+    default:
+        /* just call the default handler */
+        ret = gst_pad_query_default(pad, parent, query);
+        break;
+    }
+    return ret;
 }
 
 /* 初始化插件的入口点
