@@ -1,6 +1,0 @@
-{
-    "C_Cpp.default.compileCommands": "/workspaces/GstreamerDev/gst-template/builddir/compile_commands.json",
-    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
-    "editor.fontSize": 16,
-    "editor.fontFamily": "'Cascadia Code', 'Courier New', monospace"
-}
