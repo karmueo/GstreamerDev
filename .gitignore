@@ -1,2 +1,3 @@
 gst-template/builddir
 *.mp4
+.vscode/settings.json
